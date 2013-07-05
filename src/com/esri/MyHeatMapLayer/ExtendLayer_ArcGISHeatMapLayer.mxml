@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:layers="com.esri.MyHeatMapLayer.*"
+			   xmlns:esri="http://www.esri.com/2008/ags"
+			   xmlns:components="com.esri.MyHeatMapLayer.*"
+			   pageTitle="Extending Layer: ArcGISHeatMapLayer sample">
+	
+		<fx:Style>
+		.infoLabel
+		{
+			fontSize: 14;
+			fontWeight: bold;
+		}
+		.infoContent
+		{
+			fontSize: 12;
+		}
+	</fx:Style>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.Graphic;
+			import com.esri.ags.events.DetailsEvent;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.layers.supportClasses.TimeInfo;
+			
+			import mx.collections.ArrayCollection;
+			import mx.utils.ObjectUtil;
+			
+			import spark.events.GridEvent;
+			import spark.events.GridSortEvent;
+			
+			import com.esri.MyHeatMapLayer.ColorMatrixUtil;
+			import com.esri.MyHeatMapLayer.HeatMapEvent;
+			import com.esri.MyHeatMapLayer.HeatMapGradientDict;
+			
+			[Bindable]private var timeInfo:TimeInfo;
+			
+			
+			
+			protected function refreshStartHandler(event:HeatMapEvent):void
+			{
+				heatMapLayer.filters = [ ColorMatrixUtil.blackAndWhite ];
+			}
+			
+			protected function refreshEndHandler(event:HeatMapEvent):void
+			{
+				heatMapLayer.filters = [];
+				//dg.dataProvider = new ArrayCollection(event.featureSet.features);
+			}
+			
+			protected function themeSelectionChangedHandler(event:Event):void
+			{
+//				heatMapLayer.theme = heatMapThemeView.selectedTheme;
+				heatMapLayer.theme =DropDownList(event.target).selectedItem.data
+			}
+			
+		
+			protected function symbolsize_changeHandler(event:Event):void
+			{
+				heatMapLayer.radius1=symbolsize.value;
+				heatMapLayer.refresh();
+			}
+			
+			protected function wind_clickHandler(event:MouseEvent):void
+			{
+				heatMapLayer.isWind=true;
+				heatMapLayer.refresh();
+			}
+			
+			protected function wind_changeHandler(event:Event):void
+			{
+				wind.selected ? heatMapLayer.isWind=false: heatMapLayer.isWind=true;
+				heatMapLayer.refresh();
+			}
+			
+			protected function clustersize_changeHandler(event:Event):void
+			{
+				heatMapLayer._clusterSize=clustersize.value;
+				heatMapLayer.refresh();
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<esri:SimpleMarkerSymbol id="earthquakeSymbol"
+								 color="0xEAEAEA"
+								 size="15"
+								 style="circle">
+			<esri:outline>
+				<esri:SimpleLineSymbol width="2" color="0xC2C2C6"/>
+			</esri:outline>
+		</esri:SimpleMarkerSymbol>
+		<!-- InfoSymbol for graphic -->
+	
+	
+	
+		<s:DateTimeFormatter id="dateFormatter" dateTimePattern="MMMM dd, yyyy"/>
+		<!-- http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/spark/formatters/NumberFormatter.html -->
+		<s:NumberFormatter id="numberFormatter" fractionalDigits="2"/>
+		<esri:Extent id="initialExtent"
+					 xmin="-23" ymin="-45" xmax="179" ymax="90">
+			<esri:SpatialReference wkid="4326"/>
+		</esri:Extent>
+	</fx:Declarations>
+	
+	<s:controlBarContent>
+		<s:Spacer width="100% "/>
+		<s:RichText  fontSize="16" fontWeight="bold" fontFamily="微软雅黑">
+			改变大小
+		</s:RichText>
+		<s:HSlider id="symbolsize"
+				   width="100"
+				   liveDragging="true"
+				   maximum="60"
+				   minimum="2"
+				   snapInterval="4"
+				   value="25"
+				   change="symbolsize_changeHandler(event)"/>
+		<s:RichText fontSize="16" fontWeight="bold" fontFamily="微软雅黑">
+			改变聚合大小
+		</s:RichText>
+		
+		<s:HSlider id="clustersize"
+				   width="100"
+				   liveDragging="true"
+				   maximum="60"
+				   minimum="2"
+				   snapInterval="4"
+				   value="10"
+				   change="clustersize_changeHandler(event)"/>
+		<s:ToggleButton id="wind"
+						width="100"
+						change="wind_changeHandler(event)"
+						chromeColor="{wind.selected ? 0xBB2634 : 0x218300}"
+						color="0xFEFFFE"
+						fontSize="16"
+						cornerRadius="5"
+						fontWeight="bold"
+						label="{wind.selected ? '椭圆' : '圆形'}"
+						selected="false"/>
+		<s:DropDownList width="210 " id="theme"
+						change="themeSelectionChangedHandler(event)"
+						requireSelection=" true" >
+			<s:ArrayList id="datas">
+				<fx:Object data="{HeatMapGradientDict.RAINBOW_TYPE}" label="RAINBOW_TYPE"/>
+				<fx:Object data="{HeatMapGradientDict.RED_WHITE_BLUE_TYPE}" label="RED_WHITE_BLUE_TYPE"/>
+				<fx:Object data="{HeatMapGradientDict.THERMAL_TYPE}" label="THERMAL_TYPE"/>
+			</s:ArrayList>
+		</s:DropDownList>
+	</s:controlBarContent>
+	
+	<esri:Map id="map"
+			  level="3" 
+			  wrapAround180="true">
+		<esri:ArcGISTiledMapServiceLayer url="http://localhost:7080/PBS/rest/services/world/MapServer"/>
+		
+		<layers:ArcGISHeatMapLayer id="heatMapLayer"
+								   alpha="0.7"
+								   outFields="*"
+								   refreshEnd="refreshEndHandler(event as HeatMapEvent)" 
+								   url="http://localhost:6080/arcgis/rest/services/worldpoint/MapServer/0"
+								   useAMF="true"/>
+		<esri:GraphicsLayer id="graphicsLayer"/>
+	</esri:Map>
+	
+	
+</s:Application>

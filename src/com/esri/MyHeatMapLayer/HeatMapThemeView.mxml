@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2010-2012 Esri
+
+All rights reserved under the copyright laws of the United States
+and applicable international laws, treaties, and conventions.
+
+You may freely redistribute and use this sample code, with or
+without modification, provided you include the original copyright
+notice and use restrictions.
+
+See use restrictions in use_restrictions.txt.
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%">
+	<fx:Metadata>
+		[Event("themeSelectionChanged", type="flash.events.Event")] 
+	</fx:Metadata>
+	<s:layout>
+		<s:HorizontalLayout gap="15"
+							horizontalAlign="left"
+							verticalAlign="middle"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import MyHeatMapLayer.HeatMapGradientDict;
+			
+			import spark.events.IndexChangeEvent;
+			
+			private var selectedThemeValue:String = "";
+			
+			public function set themeLabel(value:String):void
+			{
+				m_themeLabel.text = value;
+			}
+			
+			public function get selectedTheme():String
+			{
+				return selectedThemeValue;
+			}
+			
+			public function set theme(value:String):void
+			{
+				var themeObject:Object;
+				for (var i:int = 0; i < themeButtonBar.dataProvider.length; i++)
+				{
+					themeObject = themeButtonBar.dataProvider.getItemAt(i);
+					if (themeObject.data == value)
+					{
+						themeButtonBar.selectedIndex = i;
+						break;
+						dispatchEvent(new Event("themeSelectionChanged"));
+					}
+				}
+				selectedThemeValue = value;
+			}
+			
+			protected function themeButtonBar_changeHandler(event:IndexChangeEvent):void
+			{
+				var selectedItem:Object = ButtonBar(event.target).selectedItem;
+				if (selectedItem)
+				{
+					selectedThemeValue = ButtonBar(event.target).selectedItem.data;
+					dispatchEvent(new Event("themeSelectionChanged"));
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:Label id="m_themeLabel"/>
+	<s:ButtonBar id="themeButtonBar"
+				 change="themeButtonBar_changeHandler(event)"
+				 skinClass="HeatMapLayer.HeatMapButtonBarImageSkin">
+		<s:dataProvider>
+			<s:ArrayList>
+				<fx:Object data="{HeatMapGradientDict.RAINBOW_TYPE}"
+						   icon="@Embed('../assets/images/de.png')"
+						   label="Rainbow"/>
+				<fx:Object data="{HeatMapGradientDict.RED_WHITE_BLUE_TYPE}"
+						   icon="@Embed('../assets/images/de.png')"
+						   label="Red, White, Blue"/>
+				<fx:Object data="{HeatMapGradientDict.THERMAL_TYPE}"
+						   icon="@Embed('../assets/images/de.png')"
+						   label="Thermal"/>
+			</s:ArrayList>
+		</s:dataProvider>
+	</s:ButtonBar>
+</s:Group>
